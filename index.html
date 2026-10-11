@@ -1,0 +1,380 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>SpendWise - Student Expense Tracker</title>  
+    <link rel="stylesheet" href="style.css">  
+</head>  
+<body>  
+  
+    <header class="site-header">  
+        <div class="header-top">  
+            <div class="brand">  
+                <h1>SpendWise</h1>  
+                <p>Student Expense Tracker</p>  
+            </div>  
+  
+            <div class="tagline">  
+                <p>Track your expenses. Stay within your budget.</p>  
+            </div>  
+        </div>  
+  
+        <nav class="main-nav">  
+            <a href="#dashboard">Dashboard</a>  
+            <a href="#budget">Budget</a>  
+            <a href="#add-expense">Add Expense</a>  
+            <a href="#expenses">Expenses</a>  
+            <a href="#analysis">Analysis</a>  
+            <a href="#reports">Reports</a>  
+        </nav>  
+    </header>  
+  
+    <main class="app-container">  
+  
+        <section id="dashboard" class="page-section">  
+            <div class="section-heading">  
+                <div>  
+                    <h2>Dashboard</h2>  
+                    <p id="dashboard-period">January 2026</p>  
+                </div>  
+            </div>  
+  
+            <div class="summary-grid">  
+                <div class="summary-card">  
+                    <span class="summary-label">Monthly Budget</span>  
+                    <strong id="dash-budget">0 XAF</strong>  
+                </div>  
+  
+                <div class="summary-card">  
+                    <span class="summary-label">Total Spent</span>  
+                    <strong id="dash-spent">0 XAF</strong>  
+                </div>  
+  
+                <div class="summary-card">  
+                    <span class="summary-label">Remaining</span>  
+                    <strong id="dash-remaining">0 XAF</strong>  
+                </div>  
+            </div>  
+  
+            <div class="dashboard-grid">  
+                <div class="panel">  
+                    <div class="panel-heading">  
+                        <h3>Category Breakdown</h3>  
+                    </div>  
+  
+                    <div id="dashboard-category-breakdown" class="category-breakdown"></div>  
+                </div>  
+  
+                <div class="panel">  
+                    <div class="panel-heading">  
+                        <h3>Recent Expenses</h3>  
+                    </div>  
+  
+                    <div class="table-wrapper">  
+                        <table>  
+                            <thead>  
+                                <tr>  
+                                    <th>Date</th>  
+                                    <th>Description</th>  
+                                    <th>Category</th>  
+                                    <th>Amount</th>  
+                                </tr>  
+                            </thead>  
+  
+                            <tbody id="recent-table-body"></tbody>  
+                        </table>  
+                    </div>  
+                </div>  
+            </div>  
+        </section>  
+  
+        <section id="budget" class="page-section">  
+            <div class="section-heading">  
+                <div>  
+                    <h2>Budget</h2>  
+                    <p>Set or update your monthly spending limit.</p>  
+                </div>  
+            </div>  
+  
+            <div class="panel form-panel">  
+                <div class="form-grid">  
+                    <div class="form-group">  
+                        <label for="budget-year-select">Year</label>  
+                        <select id="budget-year-select"></select>  
+                    </div>  
+  
+                    <div class="form-group">  
+                        <label for="budget-month-select">Month</label>  
+                        <select id="budget-month-select"></select>  
+                    </div>  
+  
+                    <div class="form-group">  
+                        <label for="budget-amount-input">Budget Amount (XAF)</label>  
+                        <input  
+                            type="number"  
+                            id="budget-amount-input"  
+                            min="1"  
+                            step="1"  
+                            placeholder="Enter budget"  
+                        >  
+                    </div>  
+  
+                    <div class="form-group form-action">  
+                        <button type="button" id="save-budget" class="primary-button">  
+                            Save Budget  
+                        </button>  
+                    </div>  
+                </div>  
+            </div>  
+  
+            <div class="panel current-budget">  
+                <h3>Current Budget</h3>  
+                <div class="current-budget-info">  
+                    <span id="current-budget-month">January 2026</span>  
+                    <strong id="current-budget-amount">0 XAF</strong>  
+                </div>  
+            </div>  
+        </section>  
+  
+        <section id="add-expense" class="page-section">  
+            <div class="section-heading">  
+                <div>  
+                    <h2 id="expense-form-title">Add Expense</h2>  
+                    <p>Record your daily spending.</p>  
+                </div>  
+            </div>  
+  
+            <div class="panel form-panel">  
+                <form id="expense-form">  
+                    <div class="form-grid">  
+  
+                        <div class="form-group">  
+                            <label for="amount">Amount (XAF)</label>  
+                            <input  
+                                type="number"  
+                                id="amount"  
+                                min="1"  
+                                step="1"  
+                                placeholder="Enter amount"  
+                                required  
+                            >  
+                        </div>  
+  
+                        <div class="form-group">  
+                            <label for="category">Category</label>  
+                            <select id="category" required>  
+                                <option value="">Select category</option>  
+                                <option value="School Handouts">School Handouts</option>  
+                                <option value="Transport">Transport</option>  
+                                <option value="Miscellaneous">Miscellaneous</option>  
+                            </select>  
+                        </div>  
+  
+                        <div class="form-group">  
+                            <label for="description">Description</label>  
+                            <input  
+                                type="text"  
+                                id="description"  
+                                maxlength="100"  
+                                placeholder="What did you spend on?"  
+                                required  
+                            >  
+                        </div>  
+  
+                        <div class="form-group">  
+                            <label for="expense-date">Date</label>  
+                            <input  
+                                type="date"  
+                                id="expense-date"  
+                                required  
+                            >  
+                        </div>  
+                    </div>  
+  
+                    <div class="form-buttons">  
+                        <button type="submit" id="save-expense" class="primary-button">  
+                            Add Expense  
+                        </button>  
+  
+                        <button  
+                            type="button"  
+                            id="cancel-edit"  
+                            class="secondary-button hidden"  
+                        >  
+                            Cancel Edit  
+                        </button>  
+                    </div>  
+                </form>  
+            </div>  
+        </section>  
+  
+        <section id="expenses" class="page-section">  
+            <div class="section-heading">  
+                <div>  
+                    <h2>Expenses</h2>  
+                    <p>View, filter, edit and delete your expenses.</p>  
+                </div>  
+  
+                <span id="expense-count" class="count-badge">0 expenses</span>  
+            </div>  
+  
+            <div class="panel">  
+                <div class="filters">  
+                    <div class="form-group">  
+                        <label for="filter-category">Category</label>  
+                        <select id="filter-category">  
+                            <option value="all">All Categories</option>  
+                            <option value="School Handouts">School Handouts</option>  
+                            <option value="Transport">Transport</option>  
+                            <option value="Miscellaneous">Miscellaneous</option>  
+                        </select>  
+                    </div>  
+  
+                    <div class="form-group">  
+                        <label for="filter-month">Month</label>  
+                        <select id="filter-month"></select>  
+                    </div>  
+  
+                    <div class="form-group">  
+                        <label for="filter-year">Year</label>  
+                        <select id="filter-year"></select>  
+                    </div>  
+  
+                    <div class="filter-action">  
+                        <button type="button" id="clear-filters" class="secondary-button">  
+                            Clear Filters  
+                        </button>  
+                    </div>  
+                </div>  
+  
+                <div class="table-wrapper">  
+                    <table>  
+                        <thead>  
+                            <tr>  
+                                <th>Date</th>  
+                                <th>Description</th>  
+                                <th>Category</th>  
+                                <th>Amount</th>  
+                                <th>Actions</th>  
+                            </tr>  
+                        </thead>  
+  
+                        <tbody id="expense-table-body"></tbody>  
+                    </table>  
+                </div>  
+            </div>  
+        </section>  
+  
+        <section id="analysis" class="page-section">  
+            <div class="section-heading">  
+                <div>  
+                    <h2>Analysis</h2>  
+                    <p>Understand where your money is going.</p>  
+                </div>  
+  
+                <div class="analysis-selector">  
+                    <label for="analysis-month">Month</label>  
+                    <select id="analysis-month"></select>  
+                </div>  
+            </div>  
+  
+            <div class="summary-grid">  
+                <div class="summary-card">  
+                    <span class="summary-label">Budget</span>  
+                    <strong id="analysis-budget">0 XAF</strong>  
+                </div>  
+  
+                <div class="summary-card">  
+                    <span class="summary-label">Spent</span>  
+                    <strong id="analysis-spent">0 XAF</strong>  
+                </div>  
+  
+                <div class="summary-card">  
+                    <span class="summary-label">Remaining</span>  
+                    <strong id="analysis-remaining">0 XAF</strong>  
+                </div>  
+            </div>  
+  
+            <div class="analysis-grid">  
+                <div class="panel">  
+                    <div class="panel-heading">  
+                        <h3>Category Spending</h3>  
+                    </div>  
+  
+                    <div id="category-breakdown" class="category-breakdown"></div>  
+                </div>  
+  
+                <div class="panel">  
+                    <div class="panel-heading">  
+                        <h3>Monthly Spending</h3>  
+                    </div>  
+  
+                    <div class="chart-container">  
+                        <canvas id="monthly-spending-chart"></canvas>  
+                    </div>  
+                </div>  
+            </div>  
+        </section>  
+  
+        <section id="reports" class="page-section">  
+            <div class="section-heading">  
+                <div>  
+                    <h2>Reports</h2>  
+                    <p>Review your yearly spending and download your report.</p>  
+                </div>  
+            </div>  
+  
+            <div class="report-controls">  
+                <div class="form-group">  
+                    <label for="report-year">Year</label>  
+                    <select id="report-year"></select>  
+                </div>  
+  
+                <button type="button" id="download-report" class="primary-button">  
+                    Download Excel Report  
+                </button>  
+            </div>  
+  
+            <div class="summary-grid">  
+                <div class="summary-card">  
+                    <span class="summary-label">Yearly Budget</span>  
+                    <strong id="report-budget">0 XAF</strong>  
+                </div>  
+  
+                <div class="summary-card">  
+                    <span class="summary-label">Yearly Spent</span>  
+                    <strong id="report-spent">0 XAF</strong>  
+                </div>  
+  
+                <div class="summary-card">  
+                    <span class="summary-label">Yearly Remaining</span>  
+                    <strong id="report-remaining">0 XAF</strong>  
+                </div>  
+            </div>  
+  
+            <div class="panel">  
+                <div class="table-wrapper">  
+                    <table>  
+                        <thead>  
+                            <tr>  
+                                <th>Month</th>  
+                                <th>Budget</th>  
+                                <th>Spent</th>  
+                                <th>Remaining</th>  
+                            </tr>  
+                        </thead>  
+  
+                        <tbody id="report-table-body"></tbody>  
+                    </table>  
+                </div>  
+            </div>  
+        </section>  
+  
+    </main>  
+  
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>  
+    <script src="script.js"></script>  
+  
+</body>  
+</html>  
