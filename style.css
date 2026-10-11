@@ -602,3 +602,22 @@ tbody tr:hover {
         width: 100%;  
     }  
 }  
+
+.site-footer {
+    background: #0f172a;
+    color: #cbd5e1;
+    text-align: center;
+    padding: 25px 6%;
+    margin-top: 50px;
+    border-top: 1px solid #1e293b;
+}
+
+.site-footer p {
+    margin: 5px 0;
+    font-size: 0.9rem;
+}
+
+.site-footer p:first-child {
+    font-weight: 700;
+    color: #ffffff;
+}
