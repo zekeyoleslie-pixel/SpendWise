@@ -20,14 +20,26 @@
             </div>  
         </div>  
   
-        <nav class="main-nav">  
-            <a href="#dashboard">Dashboard</a>  
-            <a href="#budget">Budget</a>  
-            <a href="#add-expense">Add Expense</a>  
-            <a href="#expenses">Expenses</a>  
-            <a href="#analysis">Analysis</a>  
-            <a href="#reports">Reports</a>  
-        </nav>  
+       <div class="header-navigation">
+    <button
+        type="button"
+        id="menu-toggle"
+        class="menu-toggle"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="main-nav"
+    >
+        <span class="menu-icon" aria-hidden="true">&#9776;</span>
+    </button>
+<nav class="main-nav" id="main-nav" aria-label="Main navigation" hidden>
+    <a href="#dashboard" data-section="dashboard">Dashboard</a>
+    <a href="#budget" data-section="budget">Budget</a>
+    <a href="#add-expense" data-section="add-expense">Add Expense</a>
+    <a href="#expenses" data-section="expenses">Expenses</a>
+    <a href="#analysis" data-section="analysis">Analysis</a>
+    <a href="#reports" data-section="reports">Reports</a>
+</nav>
+</div> 
     </header>  
   
     <main class="app-container">  

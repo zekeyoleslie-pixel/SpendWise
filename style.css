@@ -621,3 +621,154 @@ tbody tr:hover {
     font-weight: 700;
     color: #ffffff;
 }
+/* Header dropdown navigation */
+.header-navigation {
+position: relative;
+max-width: 1400px;
+margin: 16px auto 0;
+display: flex;
+justify-content: flex-end;
+}
+
+.menu-toggle {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+width: 46px;
+height: 44px;
+border: 1px solid #334155;
+border-radius: 9px;
+background: #1e293b;
+color: #ffffff;
+font-size: 1.5rem;
+line-height: 1;
+}
+
+.menu-toggle:hover,
+.menu-toggle:focus-visible {
+background: #334155;
+}
+
+.menu-toggle:focus-visible,
+.main-nav a:focus-visible {
+outline: 3px solid #86efac;
+outline-offset: 3px;
+}
+
+.main-nav[hidden] {
+display: none !important;
+}
+
+.main-nav:not([hidden]) {
+position: absolute;
+top: calc(100% + 8px);
+right: 0;
+z-index: 1100;
+display: flex;
+flex-direction: column;
+flex-wrap: nowrap;
+gap: 4px;
+width: min(260px, calc(100vw - 40px));
+max-height: min(70vh, 420px);
+overflow-y: auto;
+margin: 0;
+padding: 8px;
+border: 1px solid #334155;
+border-radius: 12px;
+background: #0f172a;
+box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+.main-nav a {
+display: block;
+padding: 11px 13px;
+border-radius: 8px;
+color: #cbd5e1;
+text-decoration: none;
+}
+
+.main-nav a:hover,
+.main-nav a.active {
+color: #ffffff;
+background: #1e293b;
+}
+
+/* Show only the selected main section */
+.page-section {
+width: 100%;
+margin: 0;
+scroll-margin-top: 110px;
+}
+
+.page-section[hidden] {
+display: none !important;
+}
+
+.app-container {
+width: 100%;
+max-width: 1400px;
+margin: 0 auto;
+padding: 35px 6% 70px;
+}
+
+/* Let the section’s panels and small information areas
+use the full available content width. */
+.page-section > .panel,
+.page-section > .form-panel,
+.page-section > .report-controls,
+.page-section > .summary-grid,
+.page-section > .dashboard-grid,
+.page-section > .analysis-grid {
+width: 100%;
+}
+
+@media (max-width: 760px) {
+.site-header {
+padding: 16px 5%;
+}
+
+.header-top {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+}
+.tagline {
+    text-align: right;
+}
+.tagline p {
+    font-size: 0.85rem;
+    margin-top: 0;
+}
+.header-navigation {
+    margin-top: 12px;
+}
+.app-container {
+    padding: 25px 5% 50px;
+}
+.summary-grid {
+    grid-template-columns: 1fr;
+}
+.dashboard-grid,
+.analysis-grid {
+    grid-template-columns: 1fr;
+}
+
+}
+
+@media (max-width: 480px) {
+.brand h1 {
+font-size: 1.55rem;
+}
+
+.brand p {
+    font-size: 0.82rem;
+}
+.tagline p {
+    max-width: 150px;
+}
+.panel,
+.summary-card {
+    padding: 18px;
+}
+
+}

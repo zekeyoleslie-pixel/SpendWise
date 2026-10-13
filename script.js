@@ -1071,6 +1071,86 @@ document.addEventListener("DOMContentLoaded", () => {
         drawMonthlyChart();  
     }  
   
+    // Navigation menu: show one app section at a time.
+    const menuToggle = document.getElementById("menu-toggle");
+    const mainNav = document.getElementById("main-nav") || document.querySelector(".main-nav");
+    const pageSections = Array.from(document.querySelectorAll(".app-container > .page-section"));
+
+    function closeNavigationMenu() {
+        if (!mainNav || !menuToggle) return;
+        mainNav.hidden = true;
+        menuToggle.setAttribute("aria-expanded", "false");
+        menuToggle.setAttribute("aria-label", "Open navigation menu");
+    }
+
+    function showSection(sectionId) {
+        const targetSection = pageSections.find(section => section.id === sectionId);
+        if (!targetSection) return;
+
+        pageSections.forEach(section => {
+            section.hidden = section !== targetSection;
+        });
+
+        if (mainNav) {
+            mainNav.querySelectorAll("a").forEach(link => {
+                const linkSection = (link.dataset.section || link.getAttribute("href") || "").replace(/^#/, "");
+                const isActive = linkSection === sectionId;
+                link.classList.toggle("active", isActive);
+                if (isActive) {
+                    link.setAttribute("aria-current", "page");
+                } else {
+                    link.removeAttribute("aria-current");
+                }
+            });
+        }
+
+        closeNavigationMenu();
+
+        if (sectionId === "analysis") {
+            requestAnimationFrame(() => drawMonthlyChart());
+        }
+    }
+
+    if (menuToggle && mainNav) {
+        menuToggle.addEventListener("click", () => {
+            const opening = mainNav.hidden;
+            mainNav.hidden = !opening;
+            menuToggle.setAttribute("aria-expanded", String(opening));
+            menuToggle.setAttribute("aria-label", opening ? "Close navigation menu" : "Open navigation menu");
+        });
+
+        mainNav.addEventListener("click", event => {
+            const link = event.target.closest("a");
+            if (!link) return;
+
+            const sectionId = (link.dataset.section || link.getAttribute("href") || "").replace(/^#/, "");
+            if (!pageSections.some(section => section.id === sectionId)) return;
+
+            event.preventDefault();
+            showSection(sectionId);
+            history.replaceState(null, "", `#${sectionId}`);
+        });
+
+        document.addEventListener("click", event => {
+            if (!mainNav.hidden && !mainNav.contains(event.target) && !menuToggle.contains(event.target)) {
+                closeNavigationMenu();
+            }
+        });
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape" && !mainNav.hidden) {
+                closeNavigationMenu();
+                menuToggle.focus();
+            }
+        });
+    }
+
+    const requestedSection = window.location.hash.slice(1);
+    const initialSection = pageSections.some(section => section.id === requestedSection)
+        ? requestedSection
+        : "dashboard";
+    showSection(initialSection);
+
     populateSelectors();  
   
     resetExpenseForm();  
