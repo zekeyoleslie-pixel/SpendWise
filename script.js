@@ -86,15 +86,18 @@ document.addEventListener("DOMContentLoaded", () => {
     let budgets = {};
     let editingExpenseId = null;
 
-    const savedExpenses = localStorage.getItem("spendwise_expenses");
-    const savedBudgets = localStorage.getItem("spendwise_budgets");
-
+    let savedExpenses = null;
+    let savedBudgets = null;
     try {
+        savedExpenses = localStorage.getItem("spendwise_expenses");
+        savedBudgets = localStorage.getItem("spendwise_budgets");
         expenses = savedExpenses ? JSON.parse(savedExpenses) : [];
         budgets = savedBudgets ? JSON.parse(savedBudgets) : {};
-    } catch {
+    } catch (error) {
+        // Continue loading with empty data if browser storage is blocked or corrupt.
         expenses = [];
         budgets = {};
+        console.warn("SpendWise could not read browser storage.", error);
     }
 
     if (!Array.isArray(expenses)) {
@@ -115,13 +118,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const today = new Date();
 
-    let selectedMonth = Number(
-        localStorage.getItem("spendwise_selected_month")
-    );
-
-    let selectedYear = Number(
-        localStorage.getItem("spendwise_selected_year")
-    );
+    let selectedMonth = today.getMonth();
+    let selectedYear = today.getFullYear();
+    try {
+        const savedMonth = localStorage.getItem("spendwise_selected_month");
+        const savedYear = localStorage.getItem("spendwise_selected_year");
+        if (savedMonth !== null) selectedMonth = Number(savedMonth);
+        if (savedYear !== null) selectedYear = Number(savedYear);
+    } catch (error) {
+        console.warn("SpendWise could not read the selected period.", error);
+    }
 
     if (!Number.isInteger(selectedMonth) || selectedMonth < 0 || selectedMonth > 11) {
         selectedMonth = today.getMonth();
@@ -136,10 +142,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function saveData() {
-        localStorage.setItem("spendwise_expenses", JSON.stringify(expenses));
-        localStorage.setItem("spendwise_budgets", JSON.stringify(budgets));
-        localStorage.setItem("spendwise_selected_month", String(selectedMonth));
-        localStorage.setItem("spendwise_selected_year", String(selectedYear));
+        try {
+            localStorage.setItem("spendwise_expenses", JSON.stringify(expenses));
+            localStorage.setItem("spendwise_budgets", JSON.stringify(budgets));
+            localStorage.setItem("spendwise_selected_month", String(selectedMonth));
+            localStorage.setItem("spendwise_selected_year", String(selectedYear));
+            const oldWarning = document.getElementById("storage-warning");
+            if (oldWarning) oldWarning.remove();
+        } catch (error) {
+            console.warn("SpendWise could not save to browser storage.", error);
+            if (!document.getElementById("storage-warning")) {
+                const warning = document.createElement("p");
+                warning.id = "storage-warning";
+                warning.className = "storage-warning";
+                warning.setAttribute("role", "status");
+                warning.textContent = "Browser storage is unavailable or full. Your latest changes may not persist after refreshing.";
+                const main = document.querySelector(".app-container");
+                if (main) main.prepend(warning);
+            }
+        }
     }
 
     function money(value) {
@@ -1089,7 +1110,7 @@ document.addEventListener("DOMContentLoaded", () => {
         transactions.addRow(["Date", "Description", "Category", "Amount (XAF)"]);
         styleHeader(transactions.getRow(4));
         const yearExpenses = expenses.filter(item => item.date && new Date(`${item.date}T00:00:00`).getFullYear() === year).sort((a,b) => a.date.localeCompare(b.date));
-        yearExpenses.forEach(item => transactions.addRow([item.date, item.description, item.category, Number(item.amount) || 0]));
+        yearExpenses.forEach(item => transactions.addRow([new Date(`${item.date}T00:00:00`), item.description, item.category, Number(item.amount) || 0]));
         if (!yearExpenses.length) transactions.addRow(["No expenses recorded for this year", "", "", 0]);
         styleDataRows(transactions, 5, Math.max(5, transactions.rowCount), [4]);
         transactions.columns = [{ width: 16 }, { width: 42 }, { width: 28 }, { width: 20 }];
