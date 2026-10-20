@@ -308,3 +308,30 @@ Suggested commits:
 - Source inspection confirms budget-meter logic, daily guidance, custom-category persistence, and a three-sheet ExcelJS workbook are present.
 - Not verified in a real browser: interactive workflows, actual downloaded workbook rendering, and device-specific layout. Complete the checklist above before deployment.
 - Browser storage remains local to the browser/device; this is not cloud backup.
+
+# SpendWise Phase 1 test checklist
+
+Before replacing the live site, test a copy of the project locally.
+
+- [ ] Existing expenses, budgets, categories, filters, charts, reports and Excel export still work.
+- [ ] Quick Add opens the expense form, sets today's date and focuses Amount.
+- [ ] Welcome guide appears only for a new/empty setup and can be dismissed.
+- [ ] Export Backup downloads a JSON file.
+- [ ] Restore Backup rejects malformed files and asks before replacing existing data.
+- [ ] Export a backup, add a test expense, restore the backup, and verify the test expense is removed and original data returns.
+- [ ] Delete a test expense, click Undo within 8 seconds, and verify it returns in the list and totals.
+- [ ] Test keyboard focus and reduced-motion behavior.
+- [ ] Test on laptop and phone widths.
+- [ ] Test with browser storage disabled/full if possible; confirm the warning is clear.
+
+Do not deploy until these manual browser checks pass. Static syntax/HTML checks passed during generation, but a real browser interaction test has not been completed here.
+
+
+## Restart and zero defaults
+- Confirm the amount and budget inputs start at `0`; the app still rejects zero as a saved expense or budget.
+- Record test expenses, save a budget, and add a custom category.
+- Use Restart & Clear All Data and accept both confirmations.
+- Verify expenses, budgets, and custom categories are cleared; default categories remain.
+- Verify dashboard, analysis, report totals, and budget values display zero and the welcome guide returns.
+- Cancel either confirmation and verify existing data is unchanged.
+- Export a backup before restart and verify it can restore the test data afterward.

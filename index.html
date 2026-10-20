@@ -35,6 +35,7 @@
                 <a href="#expenses">Expenses</a>
                 <a href="#analysis">Analysis</a>
                 <a href="#reports">Reports</a>
+                <a href="#data-help">Data &amp; Help</a>
             </nav>
         </div>
     </header>
@@ -48,6 +49,16 @@
                     <p id="dashboard-period">January 2026</p>
                 </div>
             </div>
+
+            <div class="dashboard-actions">
+                <button type="button" class="primary-button" id="quick-add-expense">+ Quick Add Expense</button>
+            </div>
+            <section id="welcome-guide" class="welcome-guide panel" aria-labelledby="welcome-guide-title" hidden>
+                <div><p class="eyebrow">GETTING STARTED</p><h3 id="welcome-guide-title">Welcome to SpendWise</h3>
+                <p>Start with a monthly budget, then record expenses as you go. Your information is saved in this browser, so create backups regularly.</p>
+                <ol><li>Set your monthly budget.</li><li>Add your first expense.</li><li>Export a backup to protect your data.</li></ol></div>
+                <button type="button" id="dismiss-welcome-guide" class="secondary-button">Got it</button>
+            </section>
 
             <div class="summary-grid">
                 <div class="summary-card">
@@ -134,9 +145,10 @@
                         <input
                             type="number"
                             id="budget-amount-input"
-                            min="1"
+                            min="0"
                             step="1"
-                            placeholder="Enter budget"
+                            value="0"
+                            placeholder="0"
                         >
                     </div>
 
@@ -174,9 +186,10 @@
                             <input
                                 type="number"
                                 id="amount"
-                                min="1"
+                                min="0"
                                 step="1"
-                                placeholder="Enter amount"
+                                value="0"
+                                placeholder="0"
                                 required
                             >
                         </div>
@@ -396,8 +409,33 @@
                 </div>
             </div>
         </section>
+        <section id="data-help" class="page-section" hidden>
+            <div class="section-heading"><div><h2>Data &amp; Help</h2><p>Protect your records and understand how SpendWise stores your information.</p></div></div>
+            <div class="panel data-tools-panel">
+                <h3>Backup and restore</h3>
+                <p>Download a JSON backup containing your expenses, budgets, custom categories, and selected period. Keep it somewhere safe. Restoring a backup replaces the current data in this browser.</p>
+                <div class="form-buttons">
+                    <button type="button" id="export-backup" class="primary-button">Export Backup</button>
+                    <button type="button" id="choose-backup" class="secondary-button">Restore Backup</button>
+                    <input type="file" id="backup-file" accept=".json,application/json" hidden>
+                </div>
+                <p id="backup-feedback" class="field-hint" role="status" aria-live="polite">Backups are stored wherever you choose to save the downloaded file.</p>
+            </div>
+            <div class="panel data-tools-panel restart-panel">
+                <h3>Restart SpendWise</h3>
+                <p>Clear all saved expenses, budgets, and custom categories in this browser and return the app to its starting state. Default categories will remain available. This action cannot be undone unless you have a backup.</p>
+                <button type="button" id="restart-app" class="danger-button">Restart &amp; Clear All Data</button>
+                <p class="field-hint" id="restart-feedback" role="status" aria-live="polite">Export a backup first if you may need your existing records later.</p>
+            </div>
+            <div class="panel data-tools-panel">
+                <h3>Your data stays in this browser</h3>
+                <p id="storage-status">SpendWise currently saves your records in this browser. It does not sync automatically across devices or provide cloud backup.</p>
+                <p class="field-hint">Tip: export a backup before clearing browser data, changing devices, or making major updates.</p>
+            </div>
+        </section>
   </main>
 
+    <div id="app-toast" class="app-toast" role="status" aria-live="polite" hidden></div>
     <footer class="site-footer">
         <p>&copy; 2026 SpendWise | Built by Zekeyo Leslie Ngwenyi | FE25A222 - Computer Engineering</p>
         <p>Track your expenses. Stay within your budget.</p>

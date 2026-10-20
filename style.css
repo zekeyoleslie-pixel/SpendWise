@@ -657,3 +657,42 @@ body { min-width: 320px; }
 
 /* Warn when browser storage is unavailable or full. */
 .storage-warning{margin:12px auto;padding:12px 16px;border:1px solid #f59e0b;border-radius:10px;background:#fffbeb;color:#92400e;font-size:.92rem;max-width:1200px}
+
+
+/* Phase 1: reliability, guidance and accessible feedback */
+.dashboard-actions { display:flex; justify-content:flex-end; margin:0 0 18px; }
+.welcome-guide { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:22px; border-left:4px solid #2563eb; }
+.welcome-guide h3, .data-tools-panel h3 { margin-bottom:8px; color:#0f172a; }
+.welcome-guide p, .data-tools-panel p { color:#475569; margin:6px 0 12px; }
+.welcome-guide ol { padding-left:22px; color:#334155; }
+.data-tools-panel { margin-bottom:20px; }
+.app-toast { position:fixed; z-index:2000; left:50%; bottom:24px; transform:translateX(-50%); display:flex; align-items:center; gap:16px; max-width:calc(100vw - 28px); padding:13px 16px; background:#0f172a; color:#fff; border-radius:12px; box-shadow:0 10px 35px rgba(15,23,42,.25); }
+.app-toast[hidden] { display:none; }
+.app-toast button { color:#bfdbfe; border:0; background:transparent; font-weight:700; text-decoration:underline; white-space:nowrap; }
+.storage-warning { background:#fff7ed; border:1px solid #fdba74; color:#9a3412; padding:12px 16px; border-radius:10px; margin-bottom:18px; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline:3px solid #60a5fa; outline-offset:3px; }
+[hidden] { display:none !important; }
+@media (max-width:640px) { .welcome-guide { flex-direction:column; } .dashboard-actions { justify-content:stretch; } .dashboard-actions button { width:100%; } .app-toast { width:calc(100vw - 24px); justify-content:space-between; } }
+@media (prefers-reduced-motion:reduce) { *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+
+
+/* Destructive action styling: clearly separate restart from routine controls. */
+.danger-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #b91c1c;
+    border-radius: 10px;
+    padding: 11px 16px;
+    background: #b91c1c;
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 160ms ease, transform 160ms ease;
+}
+.danger-button:hover { background: #991b1b; }
+.danger-button:focus-visible { outline: 3px solid #fca5a5; outline-offset: 3px; }
+.danger-button:active { transform: translateY(1px); }
+.restart-panel { border: 1px solid #fecaca; }
+@media (prefers-reduced-motion: reduce) { .danger-button { transition: none; } }

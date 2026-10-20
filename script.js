@@ -81,6 +81,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const reportRemaining = document.getElementById("report-remaining");
     const reportTableBody = document.getElementById("report-table-body");
     const downloadReportButton = document.getElementById("download-report");
+    const quickAddExpenseButton = document.getElementById("quick-add-expense");
+    const welcomeGuide = document.getElementById("welcome-guide");
+    const dismissWelcomeGuideButton = document.getElementById("dismiss-welcome-guide");
+    const exportBackupButton = document.getElementById("export-backup");
+    const chooseBackupButton = document.getElementById("choose-backup");
+    const backupFileInput = document.getElementById("backup-file");
+    const backupFeedback = document.getElementById("backup-feedback");
+    const appToast = document.getElementById("app-toast");
+    const restartAppButton = document.getElementById("restart-app");
+    const restartFeedback = document.getElementById("restart-feedback");
+    let deletedExpenseForUndo = null;
+    let undoToastTimer = null;
 
     let expenses = [];
     let budgets = {};
@@ -357,7 +369,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const daysRemaining = isCurrentMonth ? Math.max(1, daysInMonth - now.getDate() + 1) : daysInMonth;
         const remainingPercent = budget > 0 ? Math.max(0, Math.min(100, remaining / budget * 100)) : 0;
         const usedPercent = budget > 0 ? Math.max(0, Math.min(100, spent / budget * 100)) : 0;
-        if (budgetRemainingPercent) budgetRemainingPercent.textContent = budget > 0 ? `${Math.round(remainingPercent)}%` : "—";
+        if (budgetRemainingPercent) budgetRemainingPercent.textContent = `${Math.round(remainingPercent)}%`;
         if (budgetMeterSpent) budgetMeterSpent.textContent = money(spent);
         if (budgetMeterLeft) budgetMeterLeft.textContent = money(remaining);
         if (budgetProgressFill) budgetProgressFill.style.width = `${usedPercent}%`;
@@ -749,6 +761,7 @@ document.addEventListener("DOMContentLoaded", () => {
         editingExpenseId = null;
 
         expenseForm.reset();
+        if (amountInput) amountInput.value = "0";
 
         expenseFormTitle.textContent = "Add Expense";
         saveExpenseButton.textContent = "Add Expense";
@@ -800,12 +813,151 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        expenses = expenses.filter(
-            item => String(item.id) !== String(id)
-        );
-
+        deletedExpenseForUndo = { ...expense };
+        expenses = expenses.filter(item => String(item.id) !== String(id));
         saveData();
         updateAll();
+        showToast(`Deleted “${expense.description}”.`, () => {
+            if (!deletedExpenseForUndo) return;
+            if (!expenses.some(item => String(item.id) === String(deletedExpenseForUndo.id))) {
+                expenses.push(deletedExpenseForUndo);
+                saveData(); updateAll();
+            }
+            deletedExpenseForUndo = null;
+        });
+    }
+
+    function showToast(message, undoAction = null) {
+        if (!appToast) return;
+        window.clearTimeout(undoToastTimer);
+        appToast.replaceChildren();
+        const text = document.createElement("span");
+        text.textContent = message;
+        appToast.appendChild(text);
+        if (undoAction) {
+            const undoButton = document.createElement("button");
+            undoButton.type = "button";
+            undoButton.textContent = "Undo";
+            undoButton.addEventListener("click", () => { undoAction(); appToast.hidden = true; });
+            appToast.appendChild(undoButton);
+        }
+        appToast.hidden = false;
+        undoToastTimer = window.setTimeout(() => { appToast.hidden = true; deletedExpenseForUndo = null; }, undoAction ? 8000 : 3200);
+    }
+
+    function startQuickAdd() {
+        showSection("add-expense");
+        resetExpenseForm();
+        const today = new Date();
+        const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+        expenseDateInput.value = todayString;
+        amountInput.focus();
+    }
+
+    function restartSpendWise() {
+        const confirmed = window.confirm(
+            "Restart SpendWise? This will permanently clear all saved expenses, budgets, and custom categories in this browser. Export a backup first if you want to keep your data."
+        );
+        if (!confirmed) return;
+
+        const confirmedAgain = window.confirm(
+            "Final confirmation: clear all SpendWise records and return to the default state?"
+        );
+        if (!confirmedAgain) return;
+
+        // Clear only SpendWise-owned keys; never clear all browser localStorage.
+        const spendWiseKeys = [
+            "spendwise_expenses",
+            "spendwise_budgets",
+            "spendwise_selected_month",
+            "spendwise_selected_year",
+            "spendwise_custom_categories",
+            "spendwise_welcome_dismissed"
+        ];
+        try {
+            spendWiseKeys.forEach(key => localStorage.removeItem(key));
+        } catch (error) {
+            console.error("SpendWise could not clear browser storage.", error);
+            if (restartFeedback) restartFeedback.textContent = "Restart could not finish because browser storage is unavailable. No success is reported; check browser storage settings and try again.";
+            return;
+        }
+
+        expenses = [];
+        budgets = {};
+        customCategories = [];
+        CATEGORIES = [...DEFAULT_CATEGORIES];
+        editingExpenseId = null;
+        deletedExpenseForUndo = null;
+        window.clearTimeout(undoToastTimer);
+        if (appToast) appToast.hidden = true;
+
+        const now = new Date();
+        selectedMonth = now.getMonth();
+        selectedYear = YEARS.includes(now.getFullYear()) ? now.getFullYear() : YEARS[0];
+        saveData();
+        try { localStorage.setItem("spendwise_custom_categories", JSON.stringify([])); } catch {}
+
+        populateSelectors();
+        budgetYearSelect.value = String(selectedYear);
+        budgetMonthSelect.value = String(selectedMonth);
+        if (analysisMonth) analysisMonth.value = String(selectedMonth);
+        if (budgetAmountInput) budgetAmountInput.value = "0";
+        resetExpenseForm();
+        updateAll();
+        if (welcomeGuide) welcomeGuide.hidden = false;
+        if (restartFeedback) restartFeedback.textContent = "SpendWise has restarted. Expenses and budgets are cleared, totals are back to 0, and default categories are ready to use.";
+        showSection("dashboard");
+    }
+
+    function exportDataBackup() {
+        const backup = {
+            app: "SpendWise",
+            backupVersion: 1,
+            exportedAt: new Date().toISOString(),
+            expenses, budgets, customCategories, selectedMonth, selectedYear
+        };
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `spendwise-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+        if (backupFeedback) backupFeedback.textContent = `Backup exported at ${new Date().toLocaleString()}. Store the file somewhere safe.`;
+    }
+
+    function isValidBackup(data) {
+        return Boolean(data && data.app === "SpendWise" && data.backupVersion === 1 &&
+            Array.isArray(data.expenses) && data.budgets && typeof data.budgets === "object" && !Array.isArray(data.budgets) &&
+            Array.isArray(data.customCategories) && data.expenses.every(item => item && item.id !== undefined &&
+                Number.isFinite(Number(item.amount)) && typeof item.description === "string" &&
+                typeof item.category === "string" && typeof item.date === "string"));
+    }
+
+    async function restoreDataBackup(file) {
+        if (!file) return;
+        try {
+            const parsed = JSON.parse(await file.text());
+            if (!isValidBackup(parsed)) throw new Error("This file is not a valid SpendWise backup.");
+            const summary = `${parsed.expenses.length} expenses, ${Object.keys(parsed.budgets).length} budget entries, and ${parsed.customCategories.length} custom categories`;
+            if (!window.confirm(`Restore this backup containing ${summary}? This will replace the data currently stored in this browser.`)) return;
+            expenses = parsed.expenses;
+            budgets = parsed.budgets;
+            customCategories = [...new Set(parsed.customCategories.filter(value => typeof value === "string" && value.trim()).map(value => value.trim()))];
+            CATEGORIES = [...new Set([...DEFAULT_CATEGORIES, ...customCategories])];
+            if (Number.isInteger(parsed.selectedMonth) && parsed.selectedMonth >= 0 && parsed.selectedMonth <= 11) selectedMonth = parsed.selectedMonth;
+            if (Number.isInteger(parsed.selectedYear) && YEARS.includes(parsed.selectedYear)) selectedYear = parsed.selectedYear;
+            localStorage.setItem("spendwise_custom_categories", JSON.stringify(customCategories));
+            saveData();
+            populateSelectors();
+            budgetYearSelect.value = String(selectedYear); budgetMonthSelect.value = String(selectedMonth); analysisMonth.value = String(selectedMonth);
+            resetExpenseForm(); updateAll();
+            if (backupFeedback) backupFeedback.textContent = `Restore complete: ${summary}.`;
+        } catch (error) {
+            console.error("SpendWise backup restore failed.", error);
+            if (backupFeedback) backupFeedback.textContent = error.message || "Could not restore this backup. Your current data has not been intentionally replaced.";
+        } finally {
+            backupFileInput.value = "";
+        }
     }
 
     function validatePositiveWholeNumber(value) {
@@ -862,7 +1014,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         saveData();
 
-        budgetAmountInput.value = "";
+        budgetAmountInput.value = "0";
 
         updateAll();
 
@@ -1194,6 +1346,21 @@ document.addEventListener("DOMContentLoaded", () => {
         renderAnalysis();
         renderReports();
         drawMonthlyChart();
+    }
+
+    if (quickAddExpenseButton) quickAddExpenseButton.addEventListener("click", startQuickAdd);
+    if (restartAppButton) restartAppButton.addEventListener("click", restartSpendWise);
+    if (exportBackupButton) exportBackupButton.addEventListener("click", exportDataBackup);
+    if (chooseBackupButton && backupFileInput) chooseBackupButton.addEventListener("click", () => backupFileInput.click());
+    if (backupFileInput) backupFileInput.addEventListener("change", () => restoreDataBackup(backupFileInput.files && backupFileInput.files[0]));
+    if (welcomeGuide && dismissWelcomeGuideButton) {
+        let guideDismissed = false;
+        try { guideDismissed = localStorage.getItem("spendwise_welcome_dismissed") === "true"; } catch {}
+        if (!guideDismissed && expenses.length === 0 && Object.keys(budgets).length === 0) welcomeGuide.hidden = false;
+        dismissWelcomeGuideButton.addEventListener("click", () => {
+            welcomeGuide.hidden = true;
+            try { localStorage.setItem("spendwise_welcome_dismissed", "true"); } catch {}
+        });
     }
 
     populateSelectors();
