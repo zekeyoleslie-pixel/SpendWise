@@ -74,6 +74,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const analysisRemaining = document.getElementById("analysis-remaining");
     const categoryBreakdown = document.getElementById("category-breakdown");
     const monthlySpendingChart = document.getElementById("monthly-spending-chart");
+    const smartInsightsList = document.getElementById("smart-insights-list");
+    const categoryBudgetCategory = document.getElementById("category-budget-category");
+    const categoryBudgetAmount = document.getElementById("category-budget-amount");
+    const saveCategoryBudgetButton = document.getElementById("save-category-budget");
+    const categoryBudgetFeedback = document.getElementById("category-budget-feedback");
+    const categoryBudgetList = document.getElementById("category-budget-list");
+    const trendCurrentTotal = document.getElementById("trend-current-total");
+    const trendCurrentLabel = document.getElementById("trend-current-label");
+    const trendPreviousTotal = document.getElementById("trend-previous-total");
+    const trendPreviousLabel = document.getElementById("trend-previous-label");
+    const trendChangeValue = document.getElementById("trend-change-value");
+    const trendChangeLabel = document.getElementById("trend-change-label");
+    const trendCategoryComparison = document.getElementById("trend-category-comparison");
 
     const reportYear = document.getElementById("report-year");
     const reportBudget = document.getElementById("report-budget");
@@ -120,6 +133,15 @@ document.addEventListener("DOMContentLoaded", () => {
         budgets = {};
     }
 
+    let categoryBudgets = {};
+    try {
+        const savedCategoryBudgets = localStorage.getItem("spendwise_category_budgets");
+        categoryBudgets = savedCategoryBudgets ? JSON.parse(savedCategoryBudgets) : {};
+        if (!categoryBudgets || typeof categoryBudgets !== "object" || Array.isArray(categoryBudgets)) categoryBudgets = {};
+    } catch {
+        categoryBudgets = {};
+    }
+
     expenses = expenses.map(expense => ({
         ...expense,
         category:
@@ -157,6 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             localStorage.setItem("spendwise_expenses", JSON.stringify(expenses));
             localStorage.setItem("spendwise_budgets", JSON.stringify(budgets));
+            localStorage.setItem("spendwise_category_budgets", JSON.stringify(categoryBudgets));
             localStorage.setItem("spendwise_selected_month", String(selectedMonth));
             localStorage.setItem("spendwise_selected_year", String(selectedYear));
             const oldWarning = document.getElementById("storage-warning");
@@ -869,6 +892,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const spendWiseKeys = [
             "spendwise_expenses",
             "spendwise_budgets",
+            "spendwise_category_budgets",
             "spendwise_selected_month",
             "spendwise_selected_year",
             "spendwise_custom_categories",
@@ -884,6 +908,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         expenses = [];
         budgets = {};
+        categoryBudgets = {};
         customCategories = [];
         CATEGORIES = [...DEFAULT_CATEGORIES];
         editingExpenseId = null;
@@ -914,7 +939,7 @@ document.addEventListener("DOMContentLoaded", () => {
             app: "SpendWise",
             backupVersion: 1,
             exportedAt: new Date().toISOString(),
-            expenses, budgets, customCategories, selectedMonth, selectedYear
+            expenses, budgets, categoryBudgets, customCategories, selectedMonth, selectedYear
         };
         const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
@@ -942,6 +967,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!window.confirm(`Restore this backup containing ${summary}? This will replace the data currently stored in this browser.`)) return;
             expenses = parsed.expenses;
             budgets = parsed.budgets;
+            // Older Phase 1 backups do not include categoryBudgets.
+            categoryBudgets = parsed.categoryBudgets && typeof parsed.categoryBudgets === "object" && !Array.isArray(parsed.categoryBudgets)
+                ? parsed.categoryBudgets
+                : {};
             customCategories = [...new Set(parsed.customCategories.filter(value => typeof value === "string" && value.trim()).map(value => value.trim()))];
             CATEGORIES = [...new Set([...DEFAULT_CATEGORIES, ...customCategories])];
             if (Number.isInteger(parsed.selectedMonth) && parsed.selectedMonth >= 0 && parsed.selectedMonth <= 11) selectedMonth = parsed.selectedMonth;
@@ -984,6 +1013,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         newCategoryInput.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); addCategoryButton.click(); } });
     }
+
+    if (saveCategoryBudgetButton) saveCategoryBudgetButton.addEventListener("click", saveCategoryLimit);
+    if (categoryBudgetList) categoryBudgetList.addEventListener("click", event => { const button = event.target.closest("[data-remove-category-budget]"); if (button) removeCategoryLimit(button.dataset.removeCategoryBudget); });
 
     saveBudgetButton.addEventListener("click", () => {
         const year = Number(budgetYearSelect.value);
@@ -1328,6 +1360,186 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+
+    function categoryBudgetKey(year, month, category) {
+        return `${periodKey(year, month)}::${category}`;
+    }
+
+    function getCategorySpend(category, year = selectedYear, month = selectedMonth) {
+        return totalSpent(getCurrentExpenses(year, month).filter(item => String(item.category || "").trim() === category));
+    }
+
+    function renderSmartInsights() {
+        if (!smartInsightsList) return;
+        const items = getCurrentExpenses();
+        const budget = getCurrentBudget();
+        const spent = totalSpent(items);
+        const remaining = budget - spent;
+        const insights = [];
+        const now = new Date();
+        const isCurrentMonth = now.getFullYear() === selectedYear && now.getMonth() === selectedMonth;
+        const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+        const daysLeft = isCurrentMonth ? Math.max(1, daysInMonth - now.getDate() + 1) : daysInMonth;
+
+        if (items.length === 0) {
+            insights.push({type:"positive", title:"Start with a clear picture", message:"No expenses are recorded for this month yet. Add expenses as they happen to unlock more useful comparisons."});
+        } else {
+            const categoryTotals = {};
+            items.forEach(item => {
+                const category = String(item.category || "Other").trim() || "Other";
+                categoryTotals[category] = (categoryTotals[category] || 0) + (Number(item.amount) || 0);
+            });
+            const ranked = Object.entries(categoryTotals).sort((a,b) => b[1] - a[1]);
+            if (ranked.length) {
+                const share = spent > 0 ? Math.round(ranked[0][1] / spent * 100) : 0;
+                insights.push({type:"", title:`Largest category: ${ranked[0][0]}`, message:`${money(ranked[0][1])} is ${share}% of your recorded spending this month. Check whether this matches your priorities.`});
+            }
+            const previousDate = new Date(selectedYear, selectedMonth - 1, 1);
+            const previousSpent = totalSpent(getCurrentExpenses(previousDate.getFullYear(), previousDate.getMonth()));
+            if (previousSpent > 0) {
+                const difference = spent - previousSpent;
+                const pct = Math.round(Math.abs(difference) / previousSpent * 100);
+                if (difference > 0) insights.push({type:"warning", title:"Spending is higher than last month", message:`You've recorded ${money(difference)} more than the previous month (${pct}% higher). Review recent purchases to see what changed.`});
+                else if (difference < 0) insights.push({type:"positive", title:"Spending is lower than last month", message:`You've recorded ${money(Math.abs(difference))} less than the previous month (${pct}% lower). Keep the habits that are working.`});
+                else insights.push({type:"positive", title:"Spending matches last month", message:"Your recorded spending is the same as the previous month so far."});
+            } else {
+                insights.push({type:"", title:"Build a month-to-month history", message:"Record expenses in the previous month to compare trends over time."});
+            }
+        }
+
+        if (budget > 0) {
+            const usedPercent = Math.round(spent / budget * 100);
+            if (remaining < 0) insights.push({type:"warning", title:"Monthly budget exceeded", message:`You are ${money(Math.abs(remaining))} over the overall budget. Review the category limits and consider pausing optional spending.`});
+            else if (usedPercent >= 75) insights.push({type:"warning", title:"Most of your budget is used", message:`You've used ${usedPercent}% of the overall budget with ${daysLeft} day${daysLeft === 1 ? "" : "s"} in the selected month.`});
+            else insights.push({type:"positive", title:"Overall budget check", message:`You've used ${usedPercent}% of your overall monthly budget. ${money(Math.floor(remaining / daysLeft))} per day would use the remaining balance evenly across ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`});
+        } else {
+            insights.push({type:"", title:"Set an overall budget", message:"A monthly budget helps SpendWise calculate remaining funds and give more relevant spending guidance."});
+        }
+
+        const categoryLimits = Object.entries(categoryBudgets)
+            .filter(([key, value]) => key.startsWith(`${periodKey(selectedYear, selectedMonth)}::`) && Number(value) > 0)
+            .map(([key, value]) => ({category:key.split("::").slice(1).join("::"), limit:Number(value)}));
+        categoryLimits.forEach(item => {
+            const categorySpent = getCategorySpend(item.category);
+            const pct = Math.round(categorySpent / item.limit * 100);
+            if (pct >= 100) insights.push({type:"warning", title:`${item.category} limit reached`, message:`This category has used ${pct}% of its ${money(item.limit)} limit.`});
+            else if (pct >= 75) insights.push({type:"warning", title:`${item.category} is nearing its limit`, message:`${money(categorySpent)} of ${money(item.limit)} used (${pct}%).`});
+        });
+
+        smartInsightsList.innerHTML = insights.map(item => `
+            <article class="smart-insight ${item.type}">
+                <strong>${escapeHTML(item.title)}</strong>
+                <p>${escapeHTML(item.message)}</p>
+            </article>
+        `).join("");
+    }
+
+    function renderCategoryBudgets() {
+        if (!categoryBudgetCategory || !categoryBudgetList) return;
+        const currentSelection = categoryBudgetCategory.value;
+        const categories = allCategories();
+        categoryBudgetCategory.innerHTML = categories.map(category => `<option value="${escapeHTML(category)}">${escapeHTML(category)}</option>`).join("");
+        if (categories.includes(currentSelection)) categoryBudgetCategory.value = currentSelection;
+
+        const prefix = `${periodKey(selectedYear, selectedMonth)}::`;
+        const entries = Object.entries(categoryBudgets).filter(([key, value]) => key.startsWith(prefix) && Number(value) > 0)
+            .map(([key, limit]) => ({key, category:key.slice(prefix.length), limit:Number(limit)}))
+            .sort((a,b) => a.category.localeCompare(b.category));
+
+        if (!entries.length) {
+            categoryBudgetList.innerHTML = '<div class="phase2-empty">No category limits set for this month. Choose a category and add a limit above.</div>';
+            return;
+        }
+
+        categoryBudgetList.innerHTML = entries.map(entry => {
+            const spent = getCategorySpend(entry.category);
+            const remaining = entry.limit - spent;
+            const percent = Math.min(100, Math.round(spent / entry.limit * 100));
+            const stateClass = spent > entry.limit ? "over-limit" : percent >= 75 ? "near-limit" : "";
+            const status = remaining < 0 ? `${money(Math.abs(remaining))} over limit` : `${money(remaining)} left`;
+            return `<article class="category-budget-row">
+                <div class="category-budget-row-top"><strong>${escapeHTML(entry.category)}</strong><span>${money(spent)} / ${money(entry.limit)}</span></div>
+                <div class="category-budget-track" role="progressbar" aria-label="${escapeHTML(entry.category)} budget used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.min(100, percent)}"><div class="category-budget-fill ${stateClass}" style="width:${percent}%"></div></div>
+                <div class="category-budget-footer"><span>${percent}% used · ${escapeHTML(status)}</span><button type="button" data-remove-category-budget="${escapeHTML(entry.key)}">Remove limit</button></div>
+            </article>`;
+        }).join("");
+    }
+
+    function renderMonthlyTrends() {
+        if (!trendCurrentTotal) return;
+        const currentDate = new Date(selectedYear, selectedMonth, 1);
+        const previousDate = new Date(selectedYear, selectedMonth - 1, 1);
+        const currentItems = getCurrentExpenses(currentDate.getFullYear(), currentDate.getMonth());
+        const previousItems = getCurrentExpenses(previousDate.getFullYear(), previousDate.getMonth());
+        const currentTotal = totalSpent(currentItems);
+        const previousTotal = totalSpent(previousItems);
+        trendCurrentTotal.textContent = money(currentTotal);
+        trendCurrentLabel.textContent = `${MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+        trendPreviousTotal.textContent = money(previousTotal);
+        trendPreviousLabel.textContent = `${MONTHS[previousDate.getMonth()]} ${previousDate.getFullYear()}`;
+
+        if (!previousItems.length) {
+            trendChangeValue.textContent = "—";
+            trendChangeValue.className = "";
+            trendChangeLabel.textContent = "Add previous-month records to compare";
+        } else {
+            const difference = currentTotal - previousTotal;
+            const percentage = previousTotal > 0 ? Math.round(Math.abs(difference) / previousTotal * 100) : null;
+            trendChangeValue.textContent = `${difference > 0 ? "+" : difference < 0 ? "−" : ""}${money(Math.abs(difference))}`;
+            trendChangeValue.className = difference > 0 ? "trend-up" : difference < 0 ? "trend-down" : "";
+            trendChangeLabel.textContent = difference === 0 ? "No change" : `${percentage === null ? "Previous month was zero" : `${percentage}%`} ${difference > 0 ? "increase" : "decrease"}`;
+        }
+
+        const categories = [...new Set([...currentItems, ...previousItems].map(item => String(item.category || "Other").trim() || "Other"))];
+        if (!categories.length) {
+            trendCategoryComparison.innerHTML = '<div class="phase2-empty">Record expenses in two months to compare category trends.</div>';
+            return;
+        }
+        const rows = categories.map(category => {
+            const current = totalSpent(currentItems.filter(item => (String(item.category || "Other").trim() || "Other") === category));
+            const previous = totalSpent(previousItems.filter(item => (String(item.category || "Other").trim() || "Other") === category));
+            const max = Math.max(current, previous, 1);
+            const delta = current - previous;
+            const deltaText = delta === 0 ? "No change" : `${delta > 0 ? "+" : "−"}${money(Math.abs(delta))}`;
+            return `<div class="trend-category-row">
+                <span class="trend-category-name">${escapeHTML(category)}</span>
+                <div class="trend-category-bars" aria-label="${escapeHTML(category)}: current ${money(current)}, previous ${money(previous)}">
+                    <div class="trend-bar-track"><div class="trend-bar-fill" style="width:${current / max * 100}%"></div></div>
+                    <div class="trend-bar-track"><div class="trend-bar-fill previous" style="width:${previous / max * 100}%"></div></div>
+                </div>
+                <span class="trend-category-change">${escapeHTML(deltaText)}</span>
+            </div>`;
+        }).join("");
+        trendCategoryComparison.innerHTML = `<p class="field-hint">Bars show selected month first (blue), previous month second (grey).</p>${rows}`;
+    }
+
+    function saveCategoryLimit() {
+        const category = categoryBudgetCategory.value;
+        const amount = Number(categoryBudgetAmount.value);
+        if (!category) {
+            categoryBudgetFeedback.textContent = "Choose a category first.";
+            return;
+        }
+        if (!Number.isFinite(amount) || amount <= 0) {
+            categoryBudgetFeedback.textContent = "Enter a category limit greater than 0 XAF.";
+            categoryBudgetAmount.focus();
+            return;
+        }
+        categoryBudgets[categoryBudgetKey(selectedYear, selectedMonth, category)] = Math.round(amount);
+        saveData();
+        categoryBudgetAmount.value = "0";
+        categoryBudgetFeedback.textContent = `${category} limit saved for ${MONTHS[selectedMonth]} ${selectedYear}.`;
+        updateAll();
+    }
+
+    function removeCategoryLimit(key) {
+        if (!Object.prototype.hasOwnProperty.call(categoryBudgets, key)) return;
+        if (!window.confirm("Remove this category limit? Your expenses will not be deleted.")) return;
+        delete categoryBudgets[key];
+        saveData();
+        updateAll();
+    }
+
     function updateAll() {
         refreshCategorySelectors();
         updateDashboard();
@@ -1345,6 +1557,9 @@ document.addEventListener("DOMContentLoaded", () => {
         renderExpenseTable();
         renderAnalysis();
         renderReports();
+        renderSmartInsights();
+        renderCategoryBudgets();
+        renderMonthlyTrends();
         drawMonthlyChart();
     }
 

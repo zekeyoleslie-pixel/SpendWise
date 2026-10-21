@@ -34,6 +34,7 @@
                 <a href="#add-expense">Add Expense</a>
                 <a href="#expenses">Expenses</a>
                 <a href="#analysis">Analysis</a>
+                <a href="#insights">Insights</a>
                 <a href="#reports">Reports</a>
                 <a href="#data-help">Data &amp; Help</a>
             </nav>
@@ -354,6 +355,73 @@
                     </div>
                 </div>
             </div>
+        </section>
+
+
+        <section id="insights" class="page-section" hidden>
+            <div class="section-heading">
+                <div>
+                    <h2>Financial Intelligence</h2>
+                    <p>Practical insights from your recorded expenses and budgets.</p>
+                </div>
+            </div>
+
+            <div class="phase2-insight-grid">
+                <section class="panel" aria-labelledby="smart-insights-title">
+                    <div class="panel-heading">
+                        <h3 id="smart-insights-title">Smart Spending Insights</h3>
+                    </div>
+                    <p class="phase2-description">These observations are calculated from your saved records; they are guidance, not financial advice.</p>
+                    <div id="smart-insights-list" class="smart-insights-list" aria-live="polite"></div>
+                </section>
+
+                <section class="panel" aria-labelledby="category-budgets-title">
+                    <div class="panel-heading">
+                        <h3 id="category-budgets-title">Category Budget Envelopes</h3>
+                    </div>
+                    <p class="phase2-description">Set a monthly limit for each category. These limits are tracked separately from your overall monthly budget.</p>
+                    <div class="form-grid category-budget-form">
+                        <div class="form-group">
+                            <label for="category-budget-category">Category</label>
+                            <select id="category-budget-category"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="category-budget-amount">Monthly limit (XAF)</label>
+                            <input type="number" id="category-budget-amount" min="1" step="1" value="0" placeholder="e.g. 25000">
+                        </div>
+                        <div class="form-group form-action">
+                            <button type="button" class="primary-button" id="save-category-budget">Save category limit</button>
+                        </div>
+                    </div>
+                    <p id="category-budget-feedback" class="field-hint" aria-live="polite"></p>
+                    <div id="category-budget-list" class="category-budget-list"></div>
+                </section>
+            </div>
+
+            <section class="panel phase2-trends-panel" aria-labelledby="monthly-trends-title">
+                <div class="panel-heading">
+                    <h3 id="monthly-trends-title">Monthly Spending Trends</h3>
+                </div>
+                <p class="phase2-description">Compare this selected month with the previous month. A comparison is most useful when both months have records.</p>
+                <div class="trend-summary-grid">
+                    <div class="trend-stat">
+                        <span class="summary-label">Selected month</span>
+                        <strong id="trend-current-total">0 XAF</strong>
+                        <span id="trend-current-label" class="trend-label"></span>
+                    </div>
+                    <div class="trend-stat">
+                        <span class="summary-label">Previous month</span>
+                        <strong id="trend-previous-total">0 XAF</strong>
+                        <span id="trend-previous-label" class="trend-label"></span>
+                    </div>
+                    <div class="trend-stat">
+                        <span class="summary-label">Change</span>
+                        <strong id="trend-change-value">—</strong>
+                        <span id="trend-change-label" class="trend-label">No comparison yet</span>
+                    </div>
+                </div>
+                <div id="trend-category-comparison" class="trend-category-comparison"></div>
+            </section>
         </section>
 
         <section id="reports" class="page-section" hidden>

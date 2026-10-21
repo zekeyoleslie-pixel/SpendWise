@@ -335,3 +335,42 @@ Do not deploy until these manual browser checks pass. Static syntax/HTML checks 
 - Verify dashboard, analysis, report totals, and budget values display zero and the welcome guide returns.
 - Cancel either confirmation and verify existing data is unchanged.
 - Export a backup before restart and verify it can restore the test data afterward.
+# SpendWise Phase 2 Test Checklist
+
+## Before testing
+- Back up your current Phase 1 files and export a SpendWise JSON backup.
+- Use a copy of the project first. Do not test destructive actions on your only data.
+- Open the browser developer console and check for JavaScript errors.
+
+## Smart spending insights
+- [ ] With no expenses, a helpful empty-state insight appears.
+- [ ] Add multiple expenses in different categories; the largest category insight matches the recorded totals.
+- [ ] Set an overall monthly budget and verify the insight changes as spending reaches 75% and exceeds the limit.
+- [ ] Add records in the previous month and verify the comparison explains whether spending increased or decreased.
+- [ ] Set a category limit and verify a warning appears near 75% and at/above 100%.
+
+## Category budget envelopes
+- [ ] Create a limit for one category in the selected month.
+- [ ] Add expenses in that category and confirm amount, percentage, remaining value and progress bar update.
+- [ ] Confirm limits are separate for different months and years.
+- [ ] Remove a category limit and confirm expenses remain.
+- [ ] Try 0, negative, and blank limits; they should not be saved.
+- [ ] Create a custom category and confirm it can receive a category limit.
+
+## Monthly comparisons
+- [ ] Add expenses to the selected month and previous month.
+- [ ] Confirm totals, month labels, difference and percentage direction.
+- [ ] Verify category bars compare the same category across both months.
+- [ ] Test January to December of the previous year.
+- [ ] Test when the previous month has no expenses; the app should explain that comparison data is missing.
+
+## Persistence, backup and regression
+- [ ] Reload the page and confirm category limits persist.
+- [ ] Export a JSON backup with category limits and restore it.
+- [ ] Restore an older Phase 1 backup without `categoryBudgets`; it should load with no category limits.
+- [ ] Restart SpendWise and confirm category limits are cleared along with other app data.
+- [ ] Re-test navigation, budget, add/edit/delete, filters/search, reports, Excel export, backup/restore and mobile layout.
+- [ ] Test in a real browser on laptop and phone. Static checks alone do not prove full runtime correctness.
+
+## Suggested commit
+`feat: add spending insights and category budget envelopes`
